@@ -3,10 +3,10 @@ In this project, we dive into the electricity data of a factory, aiming to predi
 
 ## Components
 
-### 1. R-Markdown Files
+### R-Markdown Files
 
 - [R-Markdown File](link/to/exploratory_analysis.Rmd): This file contains code and analysis for exploring the characteristics of the electricity consumption data. It includes visualizations to identify patterns, trends, anomalies and the selection of time series model for forecasting.
 
-### 2. Report PDF
+### Report PDF
 
 - [Report](link/to/exploratory_analysis.Rmd): A comprehensive report summarizing the findings and results of the time series analysis. It includes insights into electricity consumption patterns, model performance, and recommendations for the factory.
