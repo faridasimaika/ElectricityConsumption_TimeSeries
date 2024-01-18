@@ -1,0 +1,118 @@
+---
+title: "Time Series Project"
+author: "Farida, Joyce, Katia, Marina"
+date: "5/21/2023"
+output: word_document
+---
+
+
+We are plotting the data
+
+```{r 1st step, message=FALSE, warning=FALSE, paged.print=FALSE}
+elec<-scan("electricity.csv",skip=1)
+plot.ts(elec)
+```
+We first started by examining the series to see if there is trend or a pattern in time. After plotting the intial series, it can be observed that there is an upward trend, which suggests that the series may not be stationary. 
+
+```{r 2nd step, message=FALSE, warning=FALSE, paged.print=FALSE}
+acf(elec)
+pacf(elec)
+```
+
+We additionally observed the ACF and PACF to further support the initial statement we mentioned. From the ACF we can see that it is slowly decaying and they do not die quickly and this also suggest that our first statement might be true and that this series is non-stationary. 
+
+However human eye can be deceiving therefore we decided to perform the Dickey Fuller's test to confirm our initial statement
+
+```{r 3rd step, message=FALSE, warning=FALSE, paged.print=FALSE}
+library(urca)
+library(tseries)
+elec1<-as.matrix(elec)
+df<-ur.df(elec1,type="trend",lag=1)
+adf.test(elec1,k=1)
+summary(df)
+```
+In general a series might not be stationary for two reasons; a pattern in time or a trend. The DF test statistic is a test statistic that helps us know whether the series is non-stationary or stationary. We can observe z.lag.1 to see whether the series is stationary or not, and from tt we can observe whether there is a trend or not. 
+Since the p-value is less than alpha for both z.lag.1 and tt, this suggests that we should reject H0 for both test statistics, which states that the series is stationary (it has no pattern in time). but there is a trend, therefore we need to take the first difference. 
+
+```{r 4th step, message=FALSE, warning=FALSE, paged.print=FALSE}
+elec_diff1<-diff(elec1,differences=1)
+plot.ts(elec_diff1)
+df1<-ur.df(elec_diff1,type="trend",lag=1)
+summary(df1)
+```
+
+After plotting the series again we can see that the plot now suggests that it became stationary, and from the DF test we can see that the p-value for z.lag.1 is less than alpha therefore we are going to reject the null hypothesis and conclude that the series is stationary, and for the tt the p-value is greater than alpha, therefore we will fail to reject the null hypothesis and conclude that the series has no trend. 
+
+```{r 5th step, message=FALSE, warning=FALSE, paged.print=FALSE}
+acf(elec_diff1)
+pacf(elec_diff1)
+```
+Since the series is now stationary, we can plot the ACF and PACF. After plotting both graphs, we can observe that both plots are decaying which suggests that the suitable model for this series is ARMA, and since we took the first difference we're going to try different ARIMA Models and choose the one with the lowest AIC.
+The AIC (Akaike's Information Criterion) is a measure of loss of information due to additional parameters. Therefore, a lower AIC means that the model was able to fit the model adequately using fewer parameters.
+```{r 6th step, message=FALSE, warning=FALSE, paged.print=FALSE}
+### Different models
+m0<-arima(elec,order = c(0,1,1))
+m1<-arima(elec, order=c(0,1,4))
+#m2<-arima(elec, order=c(3,1,4))
+m3<-arima(elec, order=c(3,1,0))
+m4<-arima(elec, order=c(1,1,1))
+m5<-arima(elec, order=c(1,1,3))
+m6<-arima(elec, order=c(4,1,0))
+m7<-arima(elec, order=c(4,1,1))
+#m8<-arima(elec, order=c(4,1,2))
+#m9<-arima(elec, order=c(4,1,3))
+#m10<-arima(elec, order=c(4,1,4))
+```
+
+
+```{r 7th step, message=FALSE, warning=FALSE, paged.print=FALSE}
+cat("ARIMA (0,1,1)")
+m0
+cat("ARIMA (0,1,4)")
+m1
+cat("ARIMA (3,1,0)")
+m3
+cat("ARIMA (1,1,1)")
+m4
+cat("ARIMA (1,1,3)")
+m5
+cat("ARIMA (4,1,0)")
+m6
+cat("ARIMA (4,1,1)")
+m7
+```
+According to the AIC, it is suggested that m6 is the best model for this series which is ARIMA(4,1,0), as it has the lowest AIC. Since we knew the order of the model we now need to validate the NICE assumptions which are; Normality of residuals, Independence of residuals, residuals have Constant variance, and Expectation of the residuals are equal to 0.
+```{r 8th step, message=FALSE, warning=FALSE, paged.print=FALSE}
+acf(m6$residuals)
+pacf(m6$residuals)
+```
+According to the ACF of residuals, it can be noticed that there are significant autocorrelation coefficients at lags 5 and 6, which might indicate dependence of residuals.
+```{r 9th step, message=FALSE, warning=FALSE, paged.print=FALSE}
+plot.ts(m6$residuals)
+
+qqnorm(m6$residuals)
+qqline(m6$residuals, col="red")
+```
+The time series of residuals shows that they have 0 mean, which validates the assumption of zero expectation. Additionally, the plot does not show any pattern for the variance of residuals, which validates the constant varince assumption.
+The Normal QQ-plot of residuals shows that the residuals are very close to the straight line, which indicates that they are normally distributed.
+
+```{r 10th step, message=FALSE, warning=FALSE, paged.print=FALSE}
+Box.test(m6$residuals,lag=20,fitdf=16)
+```
+To check whether our conclusion about the independence of residuals assumption is valid or not, we can use the Lung-Box-Pierce test. This test basically tests the null hypothesis: all autocorrelation coefficients of residuals are equal to 0 versus the alternative hypothesis: at least one autocorrelation coefficient is not equal to 0.
+According to Lung-Box-Pierce Test, the null hypothesis of independent residuals can be rejected, which agrees with the conclusion that was previously made from the ACF and PACF plots, which is that residuals are not independent.
+
+```{r 11th step, message=FALSE, warning=FALSE, paged.print=FALSE}
+library(forecast)
+forecast=elec[c(394,395,396,397)]
+series=elec[-c(394,395,396,397)]
+m6<-arima(series, order=c(4,1,0))
+predict(m6,n.ahead=4)
+forecast
+```
+Now that the residuals' assumptions have been checked, we can use our model for forecasting. Accordingly, we can remove the last 4 observations and check whether the chosen model is able to provide accurate forecasts for these observations. 
+The output of the R function "predict" gives forecasts that are close enough to the observed values.
+It can be noticed that the standard error or the uncertainty increases as the lags increase, or as we go forward in time, which means that the prediction becomes less accurate. This can also be noticed by the increase in the difference between the forecasted value and the observed value.
+
+Another reason why the forecast may not be very accurate is that the assumption of independent residuals was not validated.
+
