@@ -9,4 +9,4 @@ In this project, we dive into the electricity data of a factory, aiming to predi
 
 ### Report PDF
 
-- [Report](link/to/exploratory_analysis.Rmd): A comprehensive report summarizing the findings and results of the time series analysis. It includes insights into electricity consumption patterns, model performance, and recommendations for the factory.
+- [Report](https://github.com/faridasimaika/ElectricityConsumption_TimeSeries/blob/main/TSproject.pdf): A comprehensive report summarizing the findings and results of the time series analysis. It includes insights into electricity consumption patterns, model performance, and recommendations for the factory.
